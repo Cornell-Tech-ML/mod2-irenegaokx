@@ -231,7 +231,7 @@ class Tensor:
         assert self.is_leaf(), "Only leaf variables can have derivatives."
         if self.grad is None:
             self.grad = Tensor.make(
-                [0.0] * int(operators.prod(self.shape)),
+                [0.0] * int(operators.prod(self.shape)), # type: ignore
                 self.shape,
                 backend=self.backend,
             )
