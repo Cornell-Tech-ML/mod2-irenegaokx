@@ -170,6 +170,6 @@ def sum(lst: List[float]) -> float:
     return reduce(add, lst, 0.0)
 
 
-def prod(lst: List[float]) -> float:
+def prod(lst: Iterable[float]) -> float:
     """Calculates the product of all elements in a list."""
     return reduce(mul, lst, 1.0)
