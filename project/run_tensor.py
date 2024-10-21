@@ -28,13 +28,13 @@ class Network(minitorch.Module):
         h = self.layer1.forward(x).relu()
         h = self.layer2.forward(h).relu()
         return self.layer3.forward(h).sigmoid()
-    
+
 
 class Linear(minitorch.Module):
     def __init__(self, in_size, out_size):
         super().__init__()
-        self.weights = RParam(out_size, in_size) 
-        self.bias = RParam(out_size) 
+        self.weights = RParam(out_size, in_size)
+        self.bias = RParam(out_size)
         self.out_size = out_size
 
     def forward(self, x):

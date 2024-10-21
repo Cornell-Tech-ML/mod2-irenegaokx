@@ -123,7 +123,10 @@ class Mul(Function):
     def backward(ctx: Context, grad_output: Tensor) -> Tuple[Tensor, Tensor]:
         """Backward pass for the multiplication operation."""
         t1, t2 = ctx.saved_values
-        return grad_output.f.mul_zip(grad_output, t2), grad_output.f.mul_zip(grad_output, t1)
+        return grad_output.f.mul_zip(grad_output, t2), grad_output.f.mul_zip(
+            grad_output, t1
+        )
+
 
 class Sigmoid(Function):
     @staticmethod
@@ -132,14 +135,15 @@ class Sigmoid(Function):
         result = t1.f.sigmoid_map(t1)
         ctx.save_for_backward(result)
         return result
-    
+
     @staticmethod
     def backward(ctx: Context, grad_output: Tensor) -> Tensor:
         """Backward pass for the sigmoid function."""
-        (result,) = ctx.saved_values  
+        (result,) = ctx.saved_values
         one_tensor = tensor([1.0], backend=result.backend)
         grad_sigmoid = result * (one_tensor - result)
         return grad_output * grad_sigmoid
+
 
 class ReLU(Function):
     @staticmethod
@@ -154,6 +158,7 @@ class ReLU(Function):
         (t1,) = ctx.saved_values
         return grad_output.f.relu_back_zip(t1, grad_output)
 
+
 class Log(Function):
     @staticmethod
     def forward(ctx: Context, t1: Tensor) -> Tensor:
@@ -166,6 +171,7 @@ class Log(Function):
         """Backward pass for the log function."""
         (t1,) = ctx.saved_values
         return grad_output.f.log_back_zip(t1, grad_output)
+
 
 class Exp(Function):
     @staticmethod
@@ -184,7 +190,7 @@ class Exp(Function):
 
 class Sum(Function):
     @staticmethod
-    def forward(ctx: Context, t1: Tensor, dim: Optional[int] = None) -> Tensor: # type: ignore
+    def forward(ctx: Context, t1: Tensor, dim: Optional[int] = None) -> Tensor:  # type: ignore
         """Perform a sum along the specified dimension or over all elements."""
         # Save the shape and dimension for backward pass
         ctx.save_for_backward(t1.shape, dim)
@@ -201,8 +207,6 @@ class Sum(Function):
         return grad_output, 0.0
 
 
-
-
 class LT(Function):
     @staticmethod
     def forward(ctx: Context, t1: Tensor, t2: Tensor) -> Tensor:
@@ -214,6 +218,7 @@ class LT(Function):
         """Return zero gradients, since LT is not differentiable."""
         zero_grad = minitorch.zeros(grad_output.shape, backend=grad_output.backend)
         return zero_grad, zero_grad
+
 
 class EQ(Function):
     @staticmethod
@@ -229,33 +234,28 @@ class EQ(Function):
         return zero_grad, zero_grad
 
 
-
 class IsClose(Function):
     @staticmethod
     def forward(ctx: Context, t1: Tensor, t2: Tensor) -> Tensor:
         """Element-wise isclose comparison."""
         return t1.f.is_close_zip(t1, t2)
-  
 
-    
+
 class Permute(Function):
     @staticmethod
     def forward(ctx: Context, t1: Tensor, order: Tensor) -> Tensor:
         """Forward pass for the Permute operation."""
         order_int = [int(order[i].item()) for i in range(order.size)]  # type: ignore
-        ctx.save_for_backward(order_int) 
+        ctx.save_for_backward(order_int)
         return t1._new(t1._tensor.permute(*order_int))
 
     @staticmethod
     def backward(ctx: Context, grad_output: Tensor) -> Tuple[Tensor, float]:
         """Backward pass for the Permute operation."""
-        (order_int,) = ctx.saved_values 
+        (order_int,) = ctx.saved_values
         inverse = [order_int.index(i) for i in range(len(order_int))]
         grad_input = grad_output._new(grad_output._tensor.permute(*inverse))
-        return grad_input, 0.0 
-
-
-
+        return grad_input, 0.0
 
 
 class View(Function):
@@ -331,7 +331,9 @@ def zeros(shape: UserShape, backend: TensorBackend = SimpleBackend) -> Tensor:
 
     """
     return minitorch.Tensor.make(
-        [0.0] * int(operators.prod(shape)), shape, backend=backend # type: ignore
+        [0.0] * int(operators.prod(shape)),
+        shape,
+        backend=backend,  # type: ignore
     )
 
 
@@ -353,7 +355,7 @@ def rand(
         :class:`Tensor` : new tensor
 
     """
-    vals = [random.random() for _ in range(int(operators.prod(shape)))] # type: ignore
+    vals = [random.random() for _ in range(int(operators.prod(shape)))]  # type: ignore
     tensor = minitorch.Tensor.make(vals, shape, backend=backend)
     tensor.requires_grad_(requires_grad)
     return tensor
@@ -465,4 +467,3 @@ but was expecting derivative %f from central difference.
             1e-2,
             err_msg=err_msg % (f, vals, x.grad[ind], i, ind, check),
         )
-   

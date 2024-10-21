@@ -120,7 +120,7 @@ class Tensor:
 
     def item(self) -> float:
         """Convert a 1-element tensor to a float"""
-        assert self.size == 1 # type: ignore
+        assert self.size == 1  # type: ignore
         x: float = self._tensor._storage[0]
         return x
 
@@ -197,9 +197,12 @@ class Tensor:
 
     def zeros(self, shape: Optional[UserShape] = None) -> Tensor:
         """Create a new tensor filled with zeros."""
+
         def zero(shape: UserShape) -> Tensor:
             return Tensor.make(
-                [0.0] * int(operators.prod(shape)), shape, backend=self.backend # type: ignore
+                [0.0] * int(operators.prod(shape)),
+                shape,
+                backend=self.backend,  # type: ignore
             )
 
         if shape is None:
@@ -231,7 +234,7 @@ class Tensor:
         assert self.is_leaf(), "Only leaf variables can have derivatives."
         if self.grad is None:
             self.grad = Tensor.make(
-                [0.0] * int(operators.prod(self.shape)), # type: ignore
+                [0.0] * int(operators.prod(self.shape)),  # type: ignore
                 self.shape,
                 backend=self.backend,
             )
@@ -344,7 +347,6 @@ class Tensor:
         dim_value = self._ensure_tensor(dim if dim is not None else 0)
         input_tensor = self if dim is not None else self.contiguous().view(self.size)
         return All.apply(input_tensor, dim_value)
-
 
     def is_close(self, other: TensorLike) -> Tensor:
         """Element-wise comparison within tolerance."""
