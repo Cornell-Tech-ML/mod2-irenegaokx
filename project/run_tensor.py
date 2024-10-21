@@ -17,6 +17,35 @@ def default_log_fn(epoch, total_loss, correct, losses):
     print("Epoch ", epoch, " loss ", total_loss, "correct", correct)
 
 
+class Network(minitorch.Module):
+    def __init__(self, hidden_layers):
+        super().__init__()
+        self.layer1 = Linear(2, hidden_layers)
+        self.layer2 = Linear(hidden_layers, hidden_layers)
+        self.layer3 = Linear(hidden_layers, 1)
+
+    def forward(self, x):
+        h = self.layer1.forward(x).relu()
+        h = self.layer2.forward(h).relu()
+        return self.layer3.forward(h).sigmoid()
+    
+
+class Linear(minitorch.Module):
+    def __init__(self, in_size, out_size):
+        super().__init__()
+        self.weights = RParam(out_size, in_size) 
+        self.bias = RParam(out_size) 
+        self.out_size = out_size
+
+    def forward(self, x):
+        batch_size, input_size = x.shape
+        reshaped_weights = self.weights.value.view(1, input_size, self.out_size)
+        reshaped_input = x.view(batch_size, input_size, 1)
+        output = (reshaped_weights * reshaped_input).sum(dim=1)
+        output_with_bias = output.view(batch_size, self.out_size) + self.bias.value.view(self.out_size)
+        return output_with_bias
+
+
 class TensorTrain:
     def __init__(self, hidden_layers):
         self.hidden_layers = hidden_layers
