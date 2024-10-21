@@ -26,7 +26,7 @@ Number of Epochs = 1000
 Time per epoch = 0.025s
 
 ![image](image/simple_streamlit1.png)
-![image](iamge/simple_loss.png)
+![image](image/simple_loss.png)
 [Click here to view the Simple Dataset training Log](training_data/simple_training.txt)
 
 Diag Dataset:
