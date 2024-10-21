@@ -7,7 +7,7 @@ from typing_extensions import Protocol
 
 from . import operators
 from .tensor_data import (
-    MAX_DIMS,
+    # MAX_DIMS,
     broadcast_index,
     index_to_position,
     shape_broadcast,
@@ -16,7 +16,7 @@ from .tensor_data import (
 
 if TYPE_CHECKING:
     from .tensor import Tensor
-    from .tensor_data import Index, Shape, Storage, Strides
+    from .tensor_data import Shape, Storage, Strides
 
 
 class MapProto(Protocol):
@@ -41,7 +41,10 @@ class TensorOps:
     @staticmethod
     def reduce(
         fn: Callable[[float, float], float], start: float = 0.0
-    ) -> Callable[[Tensor, int], Tensor]: ...
+    ) -> Callable[[Tensor, int], Tensor]: 
+        """Reduce placeholder"""
+        ...
+   
 
     @staticmethod
     def matrix_multiply(a: Tensor, b: Tensor) -> Tensor:
@@ -179,26 +182,28 @@ class SimpleOps(TensorOps):
     def reduce(
         fn: Callable[[float, float], float], start: float = 0.0
     ) -> Callable[["Tensor", int], "Tensor"]:
-        """Higher-order tensor reduce function. ::
+        """Higher-order tensor reduce function.
 
-          fn_reduce = reduce(fn)
-          out = fn_reduce(a, dim)
+        Example Usage:
+            fn_reduce = reduce(fn)
+            out = fn_reduce(a, dim)
 
-        Simple version ::
-
+        Simple Version:
             for j:
                 out[1, j] = start
                 for i:
                     out[1, j] = fn(out[1, j], a[i, j])
 
-
         Args:
-            fn: function from two floats-to-float to apply
-            a (:class:`TensorData`): tensor to reduce over
-            dim (int): int of dim to reduce
+            fn (Callable[[float, float], float]): Function that takes two floats 
+                and returns a float, to be applied during reduction.
+            start (float): Initial value to start the reduction. Default is 0.0.
+            a (Tensor): Tensor to reduce over.
+            dim (int): Dimension along which to perform the reduction.
 
         Returns:
-            :class:`TensorData` : new tensor
+            Callable[[Tensor, int], Tensor]: A function that takes a tensor and a dimension 
+            as input, and returns a new reduced tensor.
 
         """
         f = tensor_reduce(fn)
@@ -261,8 +266,14 @@ def tensor_map(
         in_shape: Shape,
         in_strides: Strides,
     ) -> None:
-        # TODO: Implement for Task 2.3.
-        raise NotImplementedError("Need to implement for Task 2.3")
+        out_index = np.zeros_like(out_shape)  
+        in_index = np.zeros_like(in_shape)   
+
+        for i in range(len(out)): 
+            to_index(i, out_shape, out_index)  
+            broadcast_index(out_index, out_shape, in_shape, in_index)  
+            out[i] = fn(in_storage[index_to_position(in_index, in_strides)]) 
+
 
     return _map
 
@@ -306,8 +317,19 @@ def tensor_zip(
         b_shape: Shape,
         b_strides: Strides,
     ) -> None:
-        # TODO: Implement for Task 2.3.
-        raise NotImplementedError("Need to implement for Task 2.3")
+        out_index = np.zeros_like(out_shape)  
+        a_index = np.zeros_like(a_shape)    
+        b_index = np.zeros_like(b_shape)    
+
+        for i in range(len(out)): 
+            to_index(i, out_shape, out_index)  
+            broadcast_index(out_index, out_shape, a_shape, a_index) 
+            broadcast_index(out_index, out_shape, b_shape, b_index)  
+            
+            out[i] = fn(
+                a_storage[index_to_position(a_index, a_strides)],
+                b_storage[index_to_position(b_index, b_strides)],
+            )
 
     return _zip
 
@@ -337,8 +359,20 @@ def tensor_reduce(
         a_strides: Strides,
         reduce_dim: int,
     ) -> None:
-        # TODO: Implement for Task 2.3.
-        raise NotImplementedError("Need to implement for Task 2.3")
+        out_index = np.zeros_like(out_shape)  
+        a_index = np.zeros_like(a_shape)     
+
+        for i in range(len(out)): 
+            to_index(i, out_shape, out_index)  
+            
+            a_index[:] = out_index  
+            
+            for j in range(a_shape[reduce_dim]):
+                a_index[reduce_dim] = j 
+                out[i] = fn(
+                    out[i],
+                    a_storage[index_to_position(a_index, a_strides)],
+                )
 
     return _reduce
 
